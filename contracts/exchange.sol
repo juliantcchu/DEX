@@ -265,7 +265,7 @@ contract TokenExchange is Ownable {
         amountETH = eth_reserves - k / (token_reserves + amountTokens);
         amountETH -= amountETH * swap_fee_numerator / swap_fee_denominator;
 
-        require(amountETH * 100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
+        require(amountTokens * 100 / amountETH <= max_exchange_rate, 'exceeded max exchange rate');
 
         
         // transfer
@@ -299,7 +299,7 @@ contract TokenExchange is Ownable {
 
         amountTokens = token_reserves - k / (eth_reserves + amountETH);
         amountTokens -= amountTokens * swap_fee_numerator / swap_fee_denominator;
-        require(amountTokens*100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
+        require(amountETH *100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
 
 
         //update reserves
