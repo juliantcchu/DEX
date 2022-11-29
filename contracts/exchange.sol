@@ -103,7 +103,7 @@ contract TokenExchange is Ownable {
 
 
         
-
+        console.log(amount_eth, amount_token);
         payable(msg.sender).transfer(amount_eth);
         token.transfer(msg.sender, amount_token);
 

@@ -6,7 +6,7 @@
 const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
 var defaultAccount;
 
-const exchange_name = '';             // TODO: fill in the name of your exchange
+const exchange_name = 'DEX';             // TODO: fill in the name of your exchange
 
 const token_name = 'JUL';                // TODO: replace with name of your token
 const token_symbol = 'Julian';              // TODO: replace with symbol for your token
@@ -20,7 +20,7 @@ const token_symbol = 'Julian';              // TODO: replace with symbol for you
 
 // TODO: Paste your token contract address here: 
 const token_address = '0x5FbDB2315678afecb367f032d93F642f64180aa3';      
-const token_abi = [
+const token_abi =  [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -627,7 +627,7 @@ async function getPoolState() {
 // Note: maxSlippagePct will be passed in as an int out of 100. 
 // Be sure to divide by 100 for your calculations.
 
-TO_WEI = 1;
+TO_WEI = 10e18;
 /*** ADD LIQUIDITY ***/
 async function addLiquidity(amountEth, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
@@ -651,7 +651,7 @@ async function removeAllLiquidity(maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate} = await getPoolState();
     let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
-    let max_exchange_rate = oken_eth_rate * (1 + maxSlippagePct / 100) * 100;
+    let max_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
 	return exchange_contract.removeAllLiquidity(max_exchange_rate, min_exchange_rate);
 }
 
