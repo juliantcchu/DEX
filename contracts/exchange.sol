@@ -235,6 +235,19 @@ contract TokenExchange is Ownable {
     {
         /******* TODO: Implement this function *******/
 
+        uint amountETH;
+
+        //calculate amountETH using constant product formula
+
+        amountETH = eth_reserves - k / (token_reserves + amountTokens);
+
+        //update reserves
+        eth_reserves -= amountETH;
+        token_reserves += amountTokens;
+
+
+        payable(msg.sender).transfer(amountETH);
+
     }
 
 
@@ -247,6 +260,22 @@ contract TokenExchange is Ownable {
         payable 
     {
         /******* TODO: Implement this function *******/
+
+        uint amountTokens;
+        uint amountETH = msg.sender;
+
+        // calculate amountToken
+
+        amountTokens = token_reserves - k / (eth_reserves + amountETH);
+
+        //update reserves
+        eth_reserves += amountETH;
+        token_reserves -= amountTokens;
+
+
+
+        token.transfer(msg.sender, amountTokens);
+
 
     }
 }
