@@ -19,7 +19,7 @@ const token_symbol = 'Julian';              // TODO: replace with symbol for you
 // TODO: Paste your token and exchange contract ABIs in abi.js!
 
 // TODO: Paste your token contract address here: 
-const token_address = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';      
+const token_address = '0x5FbDB2315678afecb367f032d93F642f64180aa3';      
 const token_abi = [
   {
     "inputs": [],
@@ -578,7 +578,7 @@ const exchange_abi = [
     "type": "function"
   }
 ];
-const exchange_address = '';                
+const exchange_address = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';                
 const exchange_contract = new ethers.Contract(exchange_address, exchange_abi, provider.getSigner());
 
 
@@ -627,49 +627,47 @@ async function getPoolState() {
 // Note: maxSlippagePct will be passed in as an int out of 100. 
 // Be sure to divide by 100 for your calculations.
 
-TO_WEI = 10e18
+TO_WEI = 1;
 /*** ADD LIQUIDITY ***/
 async function addLiquidity(amountEth, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate, } = await getPoolState();
-    let min_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100);
-    let max_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100);
-    let amountToken = max_exchange_rate * amountEth;
-    await token_contract.approve(exchange_address, amountToken).send({from: web3.eth.defaultAccount});
-	return exchange_contract.addLiquidity(min_exchange_rate * TO_WEI, max_exchange_rate * TO_WEI).send({value: amountEth, from: web3.eth.defaultAccount, gas: 9999999999});
+    let min_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
+    let max_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
+    // let amountToken = max_exchange_rate * amountEth;
+    return exchange_contract.addLiquidity(max_exchange_rate, min_exchange_rate, {value: amountEth});
 }
 
 /*** REMOVE LIQUIDITY ***/
 async function removeLiquidity(amountEth, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate} = await getPoolState();
-    let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100);
-    let max_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100);
-	return exchange_contract.removeLiquidity(amountEth,min_exchange_rate * TO_WEI, max_exchange_rate * TO_WEI).send({from: web3.eth.defaultAccount, gas: 9999999999});
+    let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
+    let max_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
+	return exchange_contract.removeLiquidity(amountEth, max_exchange_rate, min_exchange_rate);
 }
 
 async function removeAllLiquidity(maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate} = await getPoolState();
-    let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100);
-    let max_exchange_rate = oken_eth_rate * (1 + maxSlippagePct / 100);
-	return exchange_contract.removeAllLiquidity(min_exchange_rate * TO_WEI, max_exchange_rate * TO_WEI).send({from: web3.eth.defaultAccount, gas: 9999999999});
+    let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
+    let max_exchange_rate = oken_eth_rate * (1 + maxSlippagePct / 100) * 100;
+	return exchange_contract.removeAllLiquidity(max_exchange_rate, min_exchange_rate);
 }
 
 /*** SWAP ***/
 async function swapTokensForETH(amountToken, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {eth_token_rate} = await getPoolState();
-    let max_exchange_rate = eth_token_rate * (1+ maxSlippagePct / 100);
-    await token_contract.approve(exchange_address, amountToken).send({from: web3.eth.defaultAccount});
-	return exchange_contract.swapTokensForETH(amountToken,max_exchange_rate * TO_WEI).send({from: web3.eth.defaultAccount, gas: 9999999999});
+    let max_exchange_rate = eth_token_rate * (1+ maxSlippagePct / 100) * 100;
+	return exchange_contract.swapTokensForETH(amountToken, max_exchange_rate);
 }
 
 async function swapETHForTokens(amountETH, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate} = await getPoolState();
     let max_exchange_rate = token_eth_rate * (1+maxSlippagePct / 100);
-	return exchange_contract.swapETHForTokens(max_exchange_rate * TO_WEI).send({value: amountETH, from:web3.eth.defaultAccount, gas: 9999999999});
+	return exchange_contract.swapETHForTokens(max_exchange_rate, {value: amountETH});
 }
 
 // =============================================================================

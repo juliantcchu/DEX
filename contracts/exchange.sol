@@ -43,6 +43,7 @@ contract TokenExchange is Ownable {
         payable
         onlyOwner
     {
+        console.log('amountTokens', amountTokens);
         // This function is already implemented for you; no changes needed.
 
         // require pool does not yet exist:
@@ -262,7 +263,7 @@ contract TokenExchange is Ownable {
         /******* TODO: Implement this function *******/
 
         uint amountTokens;
-        uint amountETH = msg.sender;
+        uint amountETH = msg.value;
 
         // calculate amountToken
 
