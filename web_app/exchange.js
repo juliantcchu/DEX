@@ -632,10 +632,13 @@ TO_WEI = 10e18;
 async function addLiquidity(amountEth, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {token_eth_rate, } = await getPoolState();
-    let min_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
-    let max_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
+    let min_exchange_rate = token_eth_rate * (1 - maxSlippagePct / 100) * 100;
+    let max_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
     // let amountToken = max_exchange_rate * amountEth;
-    return exchange_contract.addLiquidity(max_exchange_rate, min_exchange_rate, {value: amountEth});
+    let amountToken = amountEth * max_exchange_rate/100;
+    console.log('approving', exchange_address, amountToken)
+    await token_contract.approve(exchange_address, amountToken);
+    return exchange_contract.addLiquidity(max_exchange_rate, min_exchange_rate, {value: ethers.utils.parseUnits(amountEth.toString(), "wei") });
 }
 
 /*** REMOVE LIQUIDITY ***/
@@ -660,7 +663,8 @@ async function swapTokensForETH(amountToken, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
     let {eth_token_rate} = await getPoolState();
     let max_exchange_rate = eth_token_rate * (1+ maxSlippagePct / 100) * 100;
-	return exchange_contract.swapTokensForETH(amountToken, max_exchange_rate);
+    await token_contract.approve(exchange_address, amountToken);
+    return exchange_contract.swapTokensForETH(amountToken, max_exchange_rate);
 }
 
 async function swapETHForTokens(amountETH, maxSlippagePct) {
@@ -683,6 +687,7 @@ provider.listAccounts().then((response)=> {
     init().then(() => {
         // fill in UI with current exchange rate:
         getPoolState().then((poolState) => {
+          
             $("#eth-token-rate-display").html("1 ETH = " + poolState['token_eth_rate'] + " " + token_symbol);
             $("#token-eth-rate-display").html("1 " + token_symbol + " = " + poolState['eth_token_rate'] + " ETH");
 

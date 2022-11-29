@@ -95,22 +95,28 @@ contract TokenExchange is Ownable {
         uint amount_eth;
         uint amount_token;
 
+        console.log('running addLiquidity');
+
         amount_eth = msg.value;
         amount_token = amount_eth * eth_reserves / token_reserves;
+
+        console.log(amount_eth, amount_token, eth_reserves, token_reserves);
+        console.log(10000 * eth_reserves / token_reserves);
 
         // require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
         // require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
 
 
-        
-        console.log(amount_eth, amount_token);
         payable(msg.sender).transfer(amount_eth);
-        token.transfer(msg.sender, amount_token);
+        token.transferFrom(msg.sender, address(this), amount_token);
 
         eth_reserves += amount_eth;
         token_reserves += amount_token;
 
         k = eth_reserves * token_reserves;
+
+        console.log(eth_reserves, token_reserves, k);
+
 
         
         // update liquidity provider stakes
@@ -118,6 +124,8 @@ contract TokenExchange is Ownable {
 
         // lps ---- 10000 is the constant denominator
         uint myStake = 10000 * amount_eth / eth_reserves;
+
+        console.log(myStake);
 
         bool new_provider = true;
         for (uint i = 0; i < lp_providers.length; i++) {
@@ -129,6 +137,8 @@ contract TokenExchange is Ownable {
                 // update other existing providers stakes
                 lps[lp_providers[i]] = lps[lp_providers[i]] * (eth_reserves - amount_eth) / eth_reserves;
             }
+
+            console.log(lps[lp_providers[i]]);
         }
 
         if (new_provider){
@@ -141,6 +151,9 @@ contract TokenExchange is Ownable {
         // security checks
         require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
         require(token.allowance(msg.sender, address(this)) >= amount_token, "insuffient token allowance");
+
+
+        console.log(eth_reserves, token_reserves, k);
 
        
     }
@@ -245,6 +258,8 @@ contract TokenExchange is Ownable {
         //update reserves
         eth_reserves -= amountETH;
         token_reserves += amountTokens;
+
+        token.transferFrom(address(this), msg.sender, amountTokens);
 
 
         payable(msg.sender).transfer(amountETH);
