@@ -616,7 +616,7 @@ async function getPoolState() {
         token_liquidity: Number(liquidity_tokens),
         eth_liquidity: Number(liquidity_eth),
         token_eth_rate: Number(liquidity_tokens) / Number(liquidity_eth),
-        eth_token_rate: Number(liquidity_eth) / Number(liquidity_tokens)
+        eth_token_rate: Number(liquidity_eth) / Number(liquidity_tokens),
     };
 }
 
@@ -626,6 +626,30 @@ async function getPoolState() {
 
 // Note: maxSlippagePct will be passed in as an int out of 100. 
 // Be sure to divide by 100 for your calculations.
+
+
+
+async function getCurrentRateEth(amountEth){
+  console.log('getting amountToken / amountEth');
+  let {token_liquidity, eth_liquidity} = await getPoolState();
+  const SWAP_FEE = await exchange_contract.connect(provider.getSigner(defaultAccount)).getSwapFee();
+  const SWAP_FACTOR = 1 - Number(SWAP_FEE[0]) / Number(SWAP_FEE[1]);
+  let k = token_liquidity * eth_liquidity;
+  let amountToken = token_liquidity - k / (eth_liquidity + amountEth)
+  console.log(amountToken / amountEth)
+  return amountToken / amountEth * SWAP_FACTOR;
+}
+
+async function getCurrentRateToken(amountToken){
+  console.log('getting amountEth / amountToken');
+  let {token_liquidity, eth_liquidity} = await getPoolState();
+  const SWAP_FEE = await exchange_contract.connect(provider.getSigner(defaultAccount)).getSwapFee();
+  const SWAP_FACTOR = 1 - Number(SWAP_FEE[0]) / Number(SWAP_FEE[1]);
+  let k = token_liquidity * eth_liquidity;
+  let amountEth = eth_liquidity - k / (token_liquidity + amountToken);
+  console.log(amountEth / amountToken);
+  return amountEth / amountToken * SWAP_FACTOR;
+}
 
 // TO_HALF_WEI = 10e9;
 /*** ADD LIQUIDITY ***/
@@ -664,7 +688,7 @@ async function removeAllLiquidity(maxSlippagePct) {
 /*** SWAP ***/
 async function swapTokensForETH(amountToken, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
-    let {eth_token_rate} = await getPoolState();
+    let eth_token_rate = await getCurrentRateToken(amountToken);
     let max_exchange_rate = eth_token_rate * (1+ maxSlippagePct / 100) * 100;
     console.log('approving token',  parseInt(amountToken))
     await token_contract.approve(exchange_address, parseInt(amountToken));
@@ -674,8 +698,9 @@ async function swapTokensForETH(amountToken, maxSlippagePct) {
 
 async function swapETHForTokens(amountETH, maxSlippagePct) {
     /** : ADD YOUR CODE HERE **/
-    let {token_eth_rate} = await getPoolState();
-    let max_exchange_rate = token_eth_rate * (1+maxSlippagePct / 100);
+    let token_eth_rate = await getCurrentRateEth(amountETH);
+    let max_exchange_rate = token_eth_rate * (1 + maxSlippagePct / 100) * 100;
+    console.log('swapping', token_eth_rate, parseInt(max_exchange_rate), parseInt(amountETH), )
 	return exchange_contract.swapETHForTokens(parseInt(max_exchange_rate), {value: parseInt(amountETH)});
 }
 

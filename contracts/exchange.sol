@@ -25,8 +25,8 @@ contract TokenExchange is Ownable {
     address[] private lp_providers;    
 
     // liquidity rewards
-    uint private swap_fee_numerator = 0;                // TODO Part 5: Set liquidity providers' returns.
-    uint private swap_fee_denominator = 0;
+    uint private swap_fee_numerator = 5;                // TODO Part 5: Set liquidity providers' returns.
+    uint private swap_fee_denominator = 100;
 
     // Constant: x * y = k
     uint private k;
@@ -103,8 +103,8 @@ contract TokenExchange is Ownable {
         console.log(amount_eth, amount_token, eth_reserves, token_reserves);
         console.log(10000 * eth_reserves / token_reserves);
 
-        // require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
-        // require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
+        require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
+        require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
 
 
         // payable(msg.sender).transfer(amount_eth);
@@ -112,12 +112,8 @@ contract TokenExchange is Ownable {
 
         console.log('funds transferred');
 
-        eth_reserves += amount_eth;
-        token_reserves += amount_token;
 
-        k = eth_reserves * token_reserves;
 
-        console.log(eth_reserves, token_reserves, k);
 
 
         
@@ -154,7 +150,13 @@ contract TokenExchange is Ownable {
         require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
 
 
+        eth_reserves = address(this).balance; // amountETH; 
+        token_reserves = token.balanceOf(address(this));
+
+        k = eth_reserves * token_reserves;
+
         console.log(eth_reserves, token_reserves, k);
+
 
        
     }
@@ -171,8 +173,8 @@ contract TokenExchange is Ownable {
         // reduce stake of sender and increase everyone elses
 
         uint amountToken = amountETH * eth_reserves / token_reserves;
-        // require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
-        // require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
+        require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
+        require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
 
 
         uint points_deducted = amountETH * 10000 / eth_reserves;
@@ -191,8 +193,9 @@ contract TokenExchange is Ownable {
         payable(msg.sender).transfer(amountETH);
         token.transfer(msg.sender, amountToken);
 
-        eth_reserves -= amountETH;
-        token_reserves -= amountToken;
+
+        eth_reserves = address(this).balance; // amountETH; 
+        token_reserves = token.balanceOf(address(this));
         k = eth_reserves * token_reserves;
 
     }
@@ -209,6 +212,9 @@ contract TokenExchange is Ownable {
 
         uint amountETH = eth_reserves * lps[msg.sender] / 10000;
         uint amountToken = token_reserves * lps[msg.sender] / 10000;
+        
+        require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
+        require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
 
 
         uint factor = 10000 - lps[msg.sender];
@@ -222,8 +228,9 @@ contract TokenExchange is Ownable {
         payable(msg.sender).transfer(amountETH);
         token.transfer(msg.sender, amountToken);
 
-        eth_reserves -= amountETH;
-        token_reserves -= amountToken;
+
+        eth_reserves = address(this).balance; // amountETH; 
+        token_reserves = token.balanceOf(address(this));
         k = eth_reserves * token_reserves;
 
 
@@ -251,19 +258,26 @@ contract TokenExchange is Ownable {
         /******* TODO: Implement this function *******/
 
         uint amountETH;
+        
 
         //calculate amountETH using constant product formula
 
         amountETH = eth_reserves - k / (token_reserves + amountTokens);
+        amountETH -= amountETH * swap_fee_numerator / swap_fee_denominator;
 
-        //update reserves
-        eth_reserves -= amountETH;
-        token_reserves += amountTokens;
+        require(amountETH * 100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
 
+        
+        // transfer
         token.transferFrom(msg.sender, address(this), amountTokens);
-
-
         payable(msg.sender).transfer(amountETH);
+
+
+        //update balance
+        eth_reserves = address(this).balance; // amountETH; 
+        token_reserves = token.balanceOf(address(this));
+        k = eth_reserves * token_reserves;
+
 
     }
 
@@ -284,14 +298,22 @@ contract TokenExchange is Ownable {
         // calculate amountToken
 
         amountTokens = token_reserves - k / (eth_reserves + amountETH);
+        amountTokens -= amountTokens * swap_fee_numerator / swap_fee_denominator;
+        require(amountTokens*100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
+
 
         //update reserves
-        eth_reserves += amountETH;
-        token_reserves -= amountTokens;
+        // eth_reserves += amountETH;
+        // token_reserves -= amountTokens;
 
         console.log('transferring', msg.sender, amountTokens);
 
         token.transfer(msg.sender, amountTokens);
+
+
+        eth_reserves = address(this).balance; // amountETH; 
+        token_reserves = token.balanceOf(address(this));
+        k = eth_reserves * token_reserves;
 
 
     }
