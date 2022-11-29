@@ -37,8 +37,8 @@
       ]
     },
     "/Users/julianchu/Desktop/proj4/contracts/exchange.sol": {
-      "lastModificationDate": 1669745729254,
-      "contentHash": "4dbc8961ecd40d44e8750bbbc8687553",
+      "lastModificationDate": 1669753845402,
+      "contentHash": "7343c21f0225ee1dd6e69c6242cfd798",
       "sourceName": "contracts/exchange.sol",
       "solcConfig": {
         "version": "0.8.17",

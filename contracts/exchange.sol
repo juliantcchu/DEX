@@ -98,7 +98,7 @@ contract TokenExchange is Ownable {
         console.log('running addLiquidity');
 
         amount_eth = msg.value;
-        amount_token = amount_eth * eth_reserves / token_reserves;
+        amount_token = amount_eth * token_reserves / eth_reserves;
 
         console.log(amount_eth, amount_token, eth_reserves, token_reserves);
         console.log(10000 * eth_reserves / token_reserves);
@@ -107,8 +107,10 @@ contract TokenExchange is Ownable {
         // require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
 
 
-        payable(msg.sender).transfer(amount_eth);
+        // payable(msg.sender).transfer(amount_eth);
         token.transferFrom(msg.sender, address(this), amount_token);
+
+        console.log('funds transferred');
 
         eth_reserves += amount_eth;
         token_reserves += amount_token;
@@ -150,7 +152,6 @@ contract TokenExchange is Ownable {
 
         // security checks
         require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
-        require(token.allowance(msg.sender, address(this)) >= amount_token, "insuffient token allowance");
 
 
         console.log(eth_reserves, token_reserves, k);
@@ -259,7 +260,7 @@ contract TokenExchange is Ownable {
         eth_reserves -= amountETH;
         token_reserves += amountTokens;
 
-        token.transferFrom(address(this), msg.sender, amountTokens);
+        token.transferFrom(msg.sender, address(this), amountTokens);
 
 
         payable(msg.sender).transfer(amountETH);
@@ -288,7 +289,7 @@ contract TokenExchange is Ownable {
         eth_reserves += amountETH;
         token_reserves -= amountTokens;
 
-
+        console.log('transferring', msg.sender, amountTokens);
 
         token.transfer(msg.sender, amountTokens);
 
