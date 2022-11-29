@@ -90,19 +90,17 @@ contract TokenExchange is Ownable {
     {
         /******* TODO: Implement this function *******/
 
-
-
-        // security checks
-
-
-
-
         // update reserves
         uint amount_eth;
         uint amount_token;
 
         amount_eth = msg.value;
         amount_token = amount_eth * eth_reserves / token_reserves;
+
+        // require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
+        // require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
+
+
         
 
         payable(msg.sender).transfer(amount_eth);
@@ -137,6 +135,12 @@ contract TokenExchange is Ownable {
             lps[msg.sender] = myStake;
         }
 
+
+
+        // security checks
+        require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
+        require(token.allowance(msg.sender, address(this)) >= amount_token, "insuffient token allowance");
+
        
     }
 
@@ -149,6 +153,33 @@ contract TokenExchange is Ownable {
     {
         /******* TODO: Implement this function *******/
 
+        // reduce stake of sender and increase everyone elses
+
+        uint amountToken = amountETH * eth_reserves / token_reserves;
+        // require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
+        // require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
+
+
+        uint points_deducted = amountETH * 10000 / eth_reserves;
+        lps[msg.sender] -= points_deducted;
+        require(lps[msg.sender] > 0, 'insufficient stake');
+
+
+        uint factor = 10000 - points_deducted;
+
+        for (uint i = 0; i < lp_providers.length; i++) {
+            if (lp_providers[i] != msg.sender) {
+                lps[lp_providers[i]] = lps[lp_providers[i]] * 10000 / factor;
+            }
+        }
+
+        payable(msg.sender).transfer(amountETH);
+        token.transfer(msg.sender, amountToken);
+
+        eth_reserves -= amountETH;
+        token_reserves -= amountToken;
+        k = eth_reserves * token_reserves;
+
     }
 
     // Function removeAllLiquidity: Removes all liquidity that msg.sender is entitled to withdraw
@@ -158,6 +189,37 @@ contract TokenExchange is Ownable {
         payable
     {
         /******* TODO: Implement this function *******/
+
+        // reduce stake of sender and increase everyone else
+
+        uint amountETH = eth_reserves * lps[msg.sender] / 10000;
+        uint amountToken = token_reserves * lps[msg.sender] / 10000;
+
+
+        uint factor = 10000 - lps[msg.sender];
+
+        for (uint i = 0; i < lp_providers.length; i++) {
+            if (lp_providers[i] != msg.sender) {
+                lps[lp_providers[i]] = lps[lp_providers[i]] * 10000 / factor;
+            }
+        }
+
+        payable(msg.sender).transfer(amountETH);
+        token.transfer(msg.sender, amountToken);
+
+        eth_reserves -= amountETH;
+        token_reserves -= amountToken;
+        k = eth_reserves * token_reserves;
+
+
+
+        lps[msg.sender] = 0;
+        for (uint i = 0; i < lp_providers.length; i++) {
+            if (lp_providers[i] == msg.sender) {
+                removeLP(i);
+                return;
+            }
+        }
     
     }
     /***  Define additional functions for liquidity fees here as needed ***/
