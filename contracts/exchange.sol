@@ -91,6 +91,9 @@ contract TokenExchange is Ownable {
     {
         /******* TODO: Implement this function *******/
 
+
+        // require(address(msg.sender).balance >= msg.value, 'unsufficient balance of Eth'); 
+
         // update reserves
         uint amount_eth;
         uint amount_token;
@@ -105,6 +108,9 @@ contract TokenExchange is Ownable {
 
         require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
         require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
+
+        // require(token.balanceOf(address(msg.sender)) >= msg.value, 'unsufficient balance of Token');
+
 
 
         // payable(msg.sender).transfer(amount_eth);
@@ -147,7 +153,7 @@ contract TokenExchange is Ownable {
 
 
         // security checks
-        require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
+        // require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
 
 
         eth_reserves = address(this).balance; // amountETH; 

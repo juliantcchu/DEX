@@ -9,24 +9,29 @@
 
 
 # TODO: answer question 1 here
+because ratio of eth : token remains the same
 
 
 2. Explain your scheme for rewarding liquidity providers and justify the design decisions you made. How does it satisfy the liquidity rewards requirements outlined in Section 7?
 
 
 # TODO: answer question 2 here
+give trader 5% less token or eth than the supposed exchange rate; token and eth automatically stays at the pool
 
 
 3. Describe at least one method you used to minimize your exchange contract's gas usage. Why was this method effective?
 
 
 # TODO: answer question 3 here
+calculate max exchange rate from max slippage percent in server instead of contract. It reduces the amount of arithmetics needed. 
+
 
 
 4. Optional Feedback:
 4a. How much time did you spend on the assignment?
 
 # TODO: answer question 4(a) here
+2~3 days
 
 4b. What is one thing that would have been useful to know before starting the assignment?
 
