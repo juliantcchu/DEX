@@ -109,19 +109,12 @@ contract TokenExchange is Ownable {
         require(max_exchange_rate >= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
         require(min_exchange_rate <= amount_token * 100 / amount_eth, "exceeded max_exchange_rate");
 
-        // require(token.balanceOf(address(msg.sender)) >= msg.value, 'unsufficient balance of Token');
-
-
+        require(token.balanceOf(msg.sender) >= amount_token, 'insufficient token balance');
 
         // payable(msg.sender).transfer(amount_eth);
         token.transferFrom(msg.sender, address(this), amount_token);
 
         console.log('funds transferred');
-
-
-
-
-
         
         // update liquidity provider stakes
         // amount eth 
@@ -150,20 +143,12 @@ contract TokenExchange is Ownable {
             lps[msg.sender] = myStake;
         }
 
-
-
-        // security checks
-        // require(token.balanceOf(msg.sender) >= amount_token, "insuffient token balance");
-
-
         eth_reserves = address(this).balance; // amountETH; 
         token_reserves = token.balanceOf(address(this));
 
         k = eth_reserves * token_reserves;
 
         console.log(eth_reserves, token_reserves, k);
-
-
        
     }
 
@@ -179,6 +164,10 @@ contract TokenExchange is Ownable {
         // reduce stake of sender and increase everyone elses
 
         uint amountToken = amountETH * eth_reserves / token_reserves;
+
+        require(amountToken < token_reserves, "cant deplete token reserves to zero");
+        require(amountETH < eth_reserves, "cant deplete eth reserves to zero");
+
         require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
         require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
 
@@ -219,9 +208,11 @@ contract TokenExchange is Ownable {
         uint amountETH = eth_reserves * lps[msg.sender] / 10000;
         uint amountToken = token_reserves * lps[msg.sender] / 10000;
         
+        require(amountToken < token_reserves, "cant deplete token reserves to zero");
+        require(amountETH < eth_reserves, "cant deplete eth reserves to zero");
+
         require(max_exchange_rate >= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
         require(min_exchange_rate <= amountToken * 100 / amountToken, "exceeded max_exchange_rate");
-
 
         uint factor = 10000 - lps[msg.sender];
 
@@ -234,12 +225,9 @@ contract TokenExchange is Ownable {
         payable(msg.sender).transfer(amountETH);
         token.transfer(msg.sender, amountToken);
 
-
         eth_reserves = address(this).balance; // amountETH; 
         token_reserves = token.balanceOf(address(this));
         k = eth_reserves * token_reserves;
-
-
 
         lps[msg.sender] = 0;
         for (uint i = 0; i < lp_providers.length; i++) {
@@ -273,8 +261,10 @@ contract TokenExchange is Ownable {
 
         require(amountTokens * 100 / amountETH <= max_exchange_rate, 'exceeded max exchange rate');
 
+        require(amountETH < eth_reserves, "must not deplete eth reserves to zero");
         
         // transfer
+        require(token.balanceOf(msg.sender) >= amountTokens, "user token balance insuffienct");
         token.transferFrom(msg.sender, address(this), amountTokens);
         payable(msg.sender).transfer(amountETH);
 
@@ -306,7 +296,8 @@ contract TokenExchange is Ownable {
         amountTokens = token_reserves - k / (eth_reserves + amountETH);
         amountTokens -= amountTokens * swap_fee_numerator / swap_fee_denominator;
         require(amountETH *100 / amountTokens <= max_exchange_rate, 'exceeded max exchange rate');
-
+        
+        require(amountTokens < token_reserves, "must not deplete token reserves to zero");
 
         //update reserves
         // eth_reserves += amountETH;
@@ -316,12 +307,9 @@ contract TokenExchange is Ownable {
 
         token.transfer(msg.sender, amountTokens);
 
-
         eth_reserves = address(this).balance; // amountETH; 
         token_reserves = token.balanceOf(address(this));
         k = eth_reserves * token_reserves;
-
-
     }
 }
 
